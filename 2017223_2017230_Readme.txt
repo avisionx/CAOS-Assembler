@@ -1,0 +1,8 @@
+* Used Python3
+* To Run place your input file in the same folder as this and name it as input.txt(A sample is given for the same).
+
+	python 2017223_2017230_Assembler.py
+
+* 4 table files will be created in the same folder 
+* If any error will be reported in the console and the assembler will stop until that error is fixed
+* We have not handeled comments yet
