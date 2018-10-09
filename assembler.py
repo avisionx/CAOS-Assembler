@@ -3,10 +3,10 @@ import re
 
 # Variable/Table Name Setup
 input_file_name = "sample-input.txt"
-label_table_name = 'labelTable.txt'
-variable_table_name = 'variableTable.txt'
-literal_table_name = 'literalTable.txt'
-opcode_table_name = 'opcodeTable.txt'
+label_table_name = 'Label_Table.txt'
+variable_table_name = 'Variable_Table.txt'
+literal_table_name = 'Literal_Table.txt'
+opcode_table_name = 'Opcode_Table.txt'
 
 labelTable = []
 variableTable = []
@@ -18,10 +18,27 @@ category1 = {"CLA":"0000", "STP":"1100"}
 category2 = {"LAC":"0001", "SAC":"0010", "ADD":"0011", "SUB":"0100", "MUL":"1010", "DIV":"1011", "INP":"1000", "DSP":"1001"}
 category3 = {"BRN":"0110", "BRZ":"0101", "BRP":"0111"}
 
+# Save tables
+def saveTable(table, tableName):
+	file = open(tableName, 'w')
+	if(tableName == "Label_Table.txt"):
+		file.write("LABEL	OFFSET\n")
+	elif(tableName == "Variable_Table.txt"):
+		file.write("VAR	OFFSET	VALUE\n")
+	elif(tableName == "Literal_Table.txt"):
+		file.write("LITERAL	OFFSET	VALUE\n")
+	elif(tableName == "Opcode_Table.txt"):
+		file.write("OPCODE	BITCODE	OPERAND	OFFSET\n")
+	for line in table:
+		lineMaker = ""
+		for x in range(len(line)):
+			lineMaker += str(line[x]) + "	"
+		file.write(lineMaker + "\n")
+
 # Adds literal in table
 def addLiteralInTable(literal, locationCounter):
 	for x in range(len(literalTable)):
-		if(literalTable[x] == literal):
+		if(literalTable[x][0] == literal):
 			return
 	literalTable.append([literal, locationCounter, literal[2:-1]])
 
@@ -118,7 +135,8 @@ def main():
 			if(not variableAssignment(line[1])):
 				labelPos = searchLabelTable(line[0])
 				if(labelPos == -1):
-					print("ERROR! LABEL ALREADY DEFINED AT " + locationCounter)
+					print("ERROR! LABEL ALREADY DEFINED AT " + str(locationCounter))
+					exit()
 				elif(labelPos == -2):
 					labelTable.append([line[0], locationCounter])
 				else:
@@ -151,12 +169,13 @@ def main():
 						pass
 
 				else:
-					print("ERROR! OPCODE DOESN'T EXIST AT " + locationCounter)
-					
+					print("ERROR! OPCODE DOESN'T EXIST AT " + str(locationCounter))
+					exit()
 			else:
 				variablePos = searchVariableTable(line[0])
 				if(variablePos == -1):
-					print("ERROR! VARIABLE MULTIPLE DEFINATION AT " + locationCounter)
+					print("ERROR! VARIABLE MULTIPLE DEFINATION AT " + str(locationCounter))
+					exit()
 				elif(variablePos == -2):
 					variableTable.append([line[0], locationCounter, line[2]])
 				else:
@@ -191,16 +210,24 @@ def main():
 					pass
 
 			else:
-				print("ERROR! OPCODE DOESN'T EXIST AT " + locationCounter)
+				print("ERROR! OPCODE DOESN'T EXIST AT " + str(locationCounter))
+				exit()
 
+	for x in range(len(labelTable)):
+		if(labelTable[x][1] == ""):
+			print("ERROR! LABEL: " + str(labelTable[x][0]) + " NOT DEFINED")
+			exit()
 
-	print(labelTable)
-	print("__________________")
-	print(variableTable)
-	print("__________________")
-	print(literalTable)
-	print("__________________")
-	print(opcodeTable)
+	for x in range(len(variableTable)):
+		if(variableTable[x][1] == ""):
+			print("ERROR! VARIABLE: " + str(variableTable[x][0]) + " NOT DEFINED")
+			exit()
+	
+	saveTable(labelTable, label_table_name)
+	saveTable(variableTable, variable_table_name)
+	saveTable(literalTable, literal_table_name)
+	saveTable(opcodeTable, opcode_table_name)
+
 if __name__ == '__main__':
 	main()
 
