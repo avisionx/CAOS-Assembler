@@ -1,12 +1,12 @@
-	LAC  		I
-	ADD	 		 J
-		SAC	INTER
-			 LAC	  	K
-	ADD  		L
-    		MUL	INTER
+	LAC	I
+	ADD	J
+	SAC	INTER
+	LAC	K
+	ADD	L
+	MUL	INTER
 	STP
-I		DS	4
-J 		DS  		5
-K	 	DS		5		
-L		DS	 	4
-INTER DS 6   
+I	DS	4
+J	DS	5
+K	DS	5
+L	DS	4
+INTER	DS	6
