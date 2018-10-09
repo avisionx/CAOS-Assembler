@@ -11,12 +11,15 @@ def setup_file():
 	inputFile = open(input_file_name, "r")
 	processedList = [] 
 	
-	for line in inputFile:
+	for line in inputFile:	
 		convertTabsToSpace = line.replace('	', ' ')
 		toSingleSpace = re.sub("\s\s+" , " ", convertTabsToSpace)
 		convertSpaceToCommas = toSingleSpace.replace(' ', ',')
 		lineWithEndLine = convertSpaceToCommas.split(',')
-		lineWithEndLine[-1] = lineWithEndLine[-1].split()[0]
+		if(lineWithEndLine[-1] == ''):
+			lineWithEndLine = lineWithEndLine[0:-1]
+		else:
+			lineWithEndLine[-1] = lineWithEndLine[-1].split()[0]
 		finalLine = lineWithEndLine
 		processedList.append(finalLine)
 
