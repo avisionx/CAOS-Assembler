@@ -7,16 +7,26 @@ label_table_name = 'Label_Table.txt'
 variable_table_name = 'Variable_Table.txt'
 literal_table_name = 'Literal_Table.txt'
 opcode_table_name = 'Opcode_Table.txt'
+output_table_name = 'MachineCodeConverted.txt'
 
 labelTable = []
 variableTable = []
 literalTable = []
 opcodeTable = []
 
+assemblyCode = []
+
 # OPCODE CATEGORIES
 category1 = {"CLA":"0000", "STP":"1100"}
 category2 = {"LAC":"0001", "SAC":"0010", "ADD":"0011", "SUB":"0100", "MUL":"1010", "DIV":"1011", "INP":"1000", "DSP":"1001"}
 category3 = {"BRN":"0110", "BRZ":"0101", "BRP":"0111"}
+category4 = {"DS": "1101", "DW": "1101", "DC": "1101"}
+
+# Output Saver
+def saveOutputTable(table, tableName):
+	file = open(tableName, 'w')
+	for line in table:
+		file.write(line + "\n")
 
 # Save tables
 def saveTable(table, tableName):
@@ -34,6 +44,42 @@ def saveTable(table, tableName):
 		for x in range(len(line)):
 			lineMaker += str(line[x]) + "	"
 		file.write(lineMaker + "\n")
+
+# Returns bin code for a branching address
+def getLineBinCode(operand):
+	for i in range(len(labelTable)):
+		if(labelTable[i][0] == operand):
+			labelDefAt = labelTable[i][1]
+			binary = bin(assemblyCode[labelDefAt][3])[2:]
+			return "0"*(12 - len(binary))  + binary
+
+	return ""
+
+# Returns bin code for operand in literal and variable table
+def getBinOperandCode(operand):
+	
+	for i in range(len(literalTable)):
+		if(literalTable[i][0] == operand):
+			binary = bin(literalTable[i][3])[2:]
+			return "0"*(12 - len(binary))  + binary
+
+	for i in range(len(variableTable)):
+		if(variableTable[i][0] == operand):
+			binary = bin(variableTable[i][3])[2:]
+			return "0"*(12 - len(binary))  + binary
+
+	return ""
+
+# Gives 4bit binary opcode
+def getBinOpCode(opcode):
+	if opcode in category1:
+		return category1[opcode]
+	elif opcode in category2:
+		return category2[opcode]
+	elif opcode in category3:
+		return category3[opcode]
+	else:
+		return category4[opcode]
 
 # Adds literal in table
 def addLiteralInTable(literal, locationCounter):
@@ -109,14 +155,17 @@ def setup_file():
 	for line in inputFile:
 		convertTabsToSpace = line.replace('	', ' ')
 		toSingleSpace = re.sub("\s\s+" , " ", convertTabsToSpace)
-		convertSpaceToCommas = toSingleSpace.replace(' ', ',')
-		lineWithEndLine = convertSpaceToCommas.split(',')
-		if(lineWithEndLine[-1] == ''):
-			lineWithEndLine = lineWithEndLine[0:-1]
-		else:
-			lineWithEndLine[-1] = lineWithEndLine[-1].split()[0]
-		finalLine = lineWithEndLine
-		processedList.append(finalLine)
+		if(toSingleSpace != "\n" and toSingleSpace != " "):
+			if(toSingleSpace.find("//") != -1):
+				toSingleSpace = toSingleSpace[:toSingleSpace.find("//")] 
+			convertSpaceToCommas = toSingleSpace.replace(' ', ',')
+			lineWithEndLine = convertSpaceToCommas.split(',')
+			if(lineWithEndLine[-1] == ''):
+				lineWithEndLine = lineWithEndLine[0:-1]
+			else:
+				lineWithEndLine[-1] = lineWithEndLine[-1].split()[0]
+			finalLine = lineWithEndLine
+			processedList.append(finalLine)
 
 	inputFile.close()
 
@@ -227,6 +276,58 @@ def main():
 	saveTable(variableTable, variable_table_name)
 	saveTable(literalTable, literal_table_name)
 	saveTable(opcodeTable, opcode_table_name)
+
+	global assemblyCode
+	assemblyCode = procList
+	machineCode = []
+	
+	memoryAdrress = 0
+
+	numberOfLiterals = len(literalTable)
+
+	if(locationCounter <= 255 - numberOfLiterals):
+
+		for i in range(len(literalTable)):
+			literalTable[i].append(memoryAdrress)
+			memoryAdrress += 1		
+
+		for i in range(len(variableTable)):
+			variableTable[i].append(memoryAdrress)
+			memoryAdrress += 1
+
+		for i in range(len(assemblyCode)):
+			assemblyCode[i].append(memoryAdrress)
+			memoryAdrress += 1
+
+		for i in range(len(assemblyCode)):
+			line = assemblyCode[i]
+			machineLine = ""
+			if(line[0] != ""):
+				if(not variableAssignment(line[1])):
+					literalCode = getBinOperandCode(line[2])
+					machineLine =  getBinOpCode(line[1]) + " " + literalCode
+			else:
+				opcodeCategory = opcodeCategorizer(line[1])
+				if(opcodeCategory == 1):
+					machineLine = getBinOpCode(line[1])
+
+				elif(opcodeCategory == 2):
+					machineLine = getBinOpCode(line[1]) + " " + getBinOperandCode(line[2])
+
+				elif(opcodeCategory == 3):
+					machineLine = getBinOpCode(line[1]) + " " + getLineBinCode(line[2])
+
+			if(machineLine != ""):
+				machineCode.append(machineLine)
+
+	else:
+		print("ERROR! NOT ENOUGH MEMORY TO STORE SO MANY INSTRUCTION AND ADDRESSES")
+		exit()	
+
+	for line in machineCode:
+		print(line)
+
+	saveOutputTable(machineCode, output_table_name)
 
 if __name__ == '__main__':
 	main()
